@@ -1,1 +1,1 @@
-# manaable-hr-jai
+# Manaable HR Management System\n\nA comprehensive HR management system built with:\n- Frontend: React.js with TypeScript\n- Backend: Node.js with Express\n- Database: MongoDB\n- Authentication: JWT\n- Notifications: Email integration
