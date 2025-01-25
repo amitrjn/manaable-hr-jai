@@ -11,41 +11,59 @@ class EmailService {
   private transporter!: nodemailer.Transporter;
 
   constructor() {
-    // Initialize transporter with environment variables or fallback to Ethereal
-    if (process.env.NODE_ENV === 'production') {
-      this.transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST || 'smtp.ethereal.email',
-        port: parseInt(process.env.SMTP_PORT || '587'),
-        secure: false,
-        auth: {
-          user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASS,
-        },
+    // Initialize transporter asynchronously
+    this.initializeTransporter();
+  }
+
+  private async initializeTransporter() {
+    try {
+      // Create test account using Ethereal Email
+      const testAccount = await nodemailer.createTestAccount();
+      console.log('Ethereal Email test account created:', {
+        user: testAccount.user,
+        pass: testAccount.pass,
+        previewUrl: 'https://ethereal.email'
       });
-    } else {
-      // For development, create an Ethereal test account synchronously
+
       this.transporter = nodemailer.createTransport({
         host: 'smtp.ethereal.email',
         port: 587,
         secure: false,
         auth: {
-          user: 'test@ethereal.email',
-          pass: 'testpass123',
+          user: testAccount.user,
+          pass: testAccount.pass,
         },
       });
+
+      // Verify connection configuration
+      await this.transporter.verify();
+      console.log('SMTP connection verified successfully');
+    } catch (err) {
+      console.error('Failed to create test email account:', err);
+      throw err;
     }
   }
 
   async sendEmail({ to, subject, text, html }: EmailOptions): Promise<void> {
     try {
-      await this.transporter.sendMail({
-        from: process.env.SMTP_USER,
+      if (!this.transporter) {
+        await this.initializeTransporter();
+      }
+
+      const info = await this.transporter.sendMail({
+        from: '"HR System" <hr@manaable.com>',
         to,
         subject,
         text,
         html,
       });
-      console.log(`Email sent successfully to ${to}`);
+
+      console.log('Email sent successfully:', {
+        to,
+        subject,
+        messageId: info.messageId,
+        previewUrl: nodemailer.getTestMessageUrl(info)
+      });
     } catch (error) {
       console.error('Error sending email:', error);
       throw new Error('Failed to send email');
