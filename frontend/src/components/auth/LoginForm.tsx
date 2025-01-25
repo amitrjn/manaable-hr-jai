@@ -13,14 +13,29 @@ export function LoginForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
     try {
-      console.log('Attempting login with:', { email });
+      console.log('Attempting login with:', { 
+        email,
+        timestamp: new Date().toISOString(),
+        apiUrl: import.meta.env.VITE_API_URL
+      });
       const response = await login(email, password);
-      console.log('Login response:', response);
+      console.log('Login successful:', {
+        userId: response.user.id,
+        role: response.user.role,
+        email: response.user.email,
+        timestamp: new Date().toISOString()
+      });
       navigate('/dashboard');
     } catch (err) {
-      console.error('Login error:', err);
-      setError('Invalid credentials');
+      console.error('Login error:', {
+        error: err,
+        email,
+        apiUrl: import.meta.env.VITE_API_URL,
+        timestamp: new Date().toISOString()
+      });
+      setError(err instanceof Error ? err.message : 'Authentication failed. Please try again or contact support if the issue persists.');
     }
   };
 
