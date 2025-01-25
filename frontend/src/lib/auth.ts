@@ -43,11 +43,35 @@ export const login = async (email: string, password: string) => {
 
     if (!response.ok) {
       const errorData = await response.text();
-      console.error('Login failed:', {
+      const errorDetails = {
         status: response.status,
-        error: errorData
-      });
-      throw new Error('Login failed');
+        statusText: response.statusText,
+        error: errorData,
+        url: `${import.meta.env.VITE_API_URL}/api/auth/login`,
+        timestamp: new Date().toISOString(),
+        headers: Object.fromEntries(response.headers.entries())
+      };
+      console.error('Login failed:', errorDetails);
+      
+      // Provide more specific error messages based on status code
+      let errorMessage = 'Authentication failed';
+      switch (response.status) {
+        case 401:
+          errorMessage = 'Invalid email or password';
+          break;
+        case 404:
+          errorMessage = 'Authentication service not found';
+          break;
+        case 405:
+          errorMessage = 'Authentication method not allowed. Please check API configuration.';
+          break;
+        case 500:
+          errorMessage = 'Server error, please try again later';
+          break;
+        default:
+          errorMessage = `Login failed: ${response.statusText || errorData || 'Unknown error'}`;
+      }
+      throw new Error(errorMessage);
     }
 
     const data = await response.json();
